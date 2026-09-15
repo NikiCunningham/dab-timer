@@ -14,7 +14,6 @@
     --accent: #a78bfa;
     --heat: #f97316;
     --ready: #4ade80;
-    --warn: #facc15;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -65,13 +64,8 @@
     font-family: 'SF Mono', 'Consolas', monospace;
   }
 
-  .timer-display.ready {
-    color: var(--ready);
-  }
-
-  .timer-display.heating {
-    color: var(--heat);
-  }
+  .timer-display.ready { color: var(--ready); }
+  .timer-display.heating { color: var(--heat); }
 
   .controls {
     display: flex;
@@ -114,35 +108,53 @@
     cursor: not-allowed;
   }
 
-  .temp-controls {
+  .time-controls {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 1rem;
+    gap: 0.75rem;
     margin: 1rem 0;
+    flex-wrap: wrap;
   }
 
-  .temp-input {
+  .input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg);
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .input-group label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .time-input {
     background: var(--bg);
     border: 1px solid var(--border);
     color: var(--text);
     font-size: 1.5rem;
     font-family: 'SF Mono', 'Consolas', monospace;
-    width: 100px;
+    width: 72px;
     text-align: center;
-    padding: 0.5rem;
-    border-radius: 6px;
+    padding: 0.25rem;
+    border-radius: 4px;
   }
 
-  .temp-input:focus {
+  .time-input:focus {
     outline: none;
     border-color: var(--accent);
   }
 
   .step-btn {
-    width: 48px;
-    height: 48px;
-    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
     background: var(--border);
     border-radius: 50%;
     padding: 0;
@@ -152,6 +164,48 @@
   }
 
   .step-btn:hover { background: #3a3a42; }
+
+  .target-display {
+    text-align: center;
+    margin: 0.5rem 0 1rem;
+    padding: 0.75rem;
+    background: var(--bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .target-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .target-value {
+    font-size: 1.5rem;
+    font-family: 'SF Mono', 'Consolas', monospace;
+    color: var(--heat);
+    margin-top: 0.25rem;
+    cursor: pointer;
+  }
+
+  .target-value:hover { text-decoration: underline; }
+
+  .progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 1rem 0;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--heat), var(--ready));
+    border-radius: 2px;
+    transition: width 0.1s linear;
+    width: 0%;
+  }
 
   .alert-bar {
     text-align: center;
@@ -260,9 +314,7 @@
     flex-wrap: wrap;
   }
 
-  .log-tag {
-    color: var(--muted);
-  }
+  .log-tag { color: var(--muted); }
 
   .empty-log {
     color: var(--muted);
@@ -313,20 +365,24 @@
 <!-- HEAT TIMER CARD -->
 <div class="card">
   <div class="card-title">Heat Timer</div>
-  <div class="timer-display" id="heat-timer">00:00</div>
+  <div class="timer-display heating" id="heat-timer">00:00</div>
 
-  <div class="temp-controls">
-    <button class="step-btn" id="temp-down-10">−10°</button>
-    <button class="step-btn" id="temp-down-1">−1°</button>
-    <input type="number" class="temp-input" id="temp-input" value="315" min="0" max="500">
-    <button class="step-btn" id="temp-up-1">+1°</button>
-    <button class="step-btn" id="temp-up-10">+10°</button>
+  <div class="target-display">
+    <div class="target-label">Target Heat Time</div>
+    <div class="target-value" id="target-value">45s</div>
   </div>
 
-  <div class="countdown-mode">
-    <label>Cool-down:</label>
-    <button class="mode-btn active" data-mode="countdown" id="mode-countdown">Timer</button>
-    <button class="mode-btn" data-mode="manual" id="mode-manual">Manual</button>
+  <div class="time-controls">
+    <div class="input-group">
+      <label>Heat for</label>
+      <button class="step-btn" id="target-down-5" title="−5s">−5</button>
+      <input type="number" class="time-input" id="target-input" value="45" min="1" max="999">
+      <button class="step-btn" id="target-up-5" title="+5s">+5</button>
+    </div>
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress-fill"></div>
   </div>
 
   <div class="controls">
@@ -336,21 +392,21 @@
   </div>
 
   <div class="alert-bar heat-reached" id="heat-alert">
-    🔥 Target temp reached! Start cooling now.
+    ⏱ Target time reached! Start cooling now.
   </div>
 
   <div class="session-info">
     <div class="session-stat">
-      <div class="session-stat-label">Temp</div>
-      <div class="session-stat-value" id="current-temp">— °F</div>
-    </div>
-    <div class="session-stat">
-      <div class="session-stat-label">Heat Time</div>
+      <div class="session-stat-label">Elapsed</div>
       <div class="session-stat-value" id="heat-duration-display">00:00</div>
     </div>
     <div class="session-stat">
       <div class="session-stat-label">Target</div>
-      <div class="session-stat-value" id="target-temp-display">315°F</div>
+      <div class="session-stat-value" id="target-display-stat">45s</div>
+    </div>
+    <div class="session-stat">
+      <div class="session-stat-label">Progress</div>
+      <div class="session-stat-value" id="progress-pct">0%</div>
     </div>
   </div>
 </div>
@@ -359,6 +415,12 @@
 <div class="card" id="cool-card" style="display:none;">
   <div class="card-title" id="cool-title">Cool Down</div>
   <div class="timer-display ready" id="cool-timer">00:00</div>
+
+  <div class="countdown-mode">
+    <label>Cool-down:</label>
+    <button class="mode-btn active" data-mode="countdown" id="mode-countdown">Timer</button>
+    <button class="mode-btn" data-mode="manual" id="mode-manual">Manual</button>
+  </div>
 
   <div class="controls">
     <button class="primary" id="cool-start" style="display:none;">Ready to Hit</button>
@@ -380,8 +442,8 @@
       <div class="session-stat-value" id="total-duration-display">00:00</div>
     </div>
     <div class="session-stat">
-      <div class="session-stat-label">Temp When Ready</div>
-      <div class="session-stat-value" id="ready-temp-display">— °F</div>
+      <div class="session-stat-label">Heat Time</div>
+      <div class="session-stat-value" id="final-heat-display">00:00</div>
     </div>
   </div>
 </div>
@@ -400,39 +462,37 @@
 </div>
 
 <script>
-  // State
   const state = {
     heatRunning: false,
     heatPaused: false,
-    heatElapsed: 0,       // ms
+    heatElapsed: 0,
     heatStartTimestamp: 0,
 
     coolRunning: false,
     coolPaused: false,
     coolElapsed: 0,
     coolStartTimestamp: 0,
-    coolMode: 'countdown', // or 'manual'
+    coolMode: 'countdown',
     coolCountdownSeconds: 60,
 
-    temp: 315,
-    targetTemp: 315,
-    tempReached: false,
-    readyTemp: null,
+    targetSeconds: 45,
+    targetReached: false,
 
     log: []
   };
 
-  // DOM refs
   const $ = id => document.getElementById(id);
   const heatTimerEl = $('heat-timer');
   const coolTimerEl = $('cool-timer');
-  const tempInput = $('temp-input');
-  const currentTempEl = $('current-temp');
+  const targetInput = $('target-input');
+  const targetValueEl = $('target-value');
+  const targetDisplayStat = $('target-display-stat');
   const heatDurationDisplay = $('heat-duration-display');
   const coolDurationDisplay = $('cool-duration-display');
   const totalDurationDisplay = $('total-duration-display');
-  const targetTempDisplay = $('target-temp-display');
-  const readyTempDisplay = $('ready-temp-display');
+  const finalHeatDisplay = $('final-heat-display');
+  const progressFill = $('progress-fill');
+  const progressPct = $('progress-pct');
   const heatAlert = $('heat-alert');
   const coolAlert = $('cool-alert');
   const coolCard = $('cool-card');
@@ -441,14 +501,13 @@
   let heatTimerInterval = null;
   let coolTimerInterval = null;
 
-  // Format time
-  function fmt(seconds) {
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
+  function fmt(sec) {
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   }
 
-  function fmtFull(ms) {
+  function fmtMs(ms) {
     const totalSec = Math.floor(ms / 1000);
     const m = Math.floor(totalSec / 60);
     const s = totalSec % 60;
@@ -457,7 +516,7 @@
 
   function now() { return Date.now(); }
 
-  // Heat timer logic
+  // ---- Heat timer ----
   function startHeat() {
     state.heatRunning = true;
     state.heatPaused = false;
@@ -469,18 +528,24 @@
   function tickHeat() {
     if (!state.heatPaused) {
       state.heatElapsed = now() - state.heatStartTimestamp;
-      heatTimerEl.textContent = fmtFull(state.heatElapsed);
-      heatDurationDisplay.textContent = fmtFull(state.heatElapsed);
+      const elapsedSec = state.heatElapsed / 1000;
+      heatTimerEl.textContent = fmt(elapsedSec);
+      heatDurationDisplay.textContent = fmt(elapsedSec);
 
-      // Check if temp reached (user must set temp manually to match their rig)
-      if (state.temp >= state.targetTemp && !state.tempReached) {
-        state.tempReached = true;
+      const pct = Math.min(100, (elapsedSec / state.targetSeconds) * 100);
+      progressFill.style.width = `${pct}%`;
+      progressPct.textContent = `${Math.floor(pct)}%`;
+
+      if (elapsedSec >= state.targetSeconds && !state.targetReached) {
+        state.targetReached = true;
         heatAlert.classList.add('show');
-        // Auto-show cool card
         coolCard.style.display = 'block';
         coolTitle.textContent = 'Cool Down';
         if (state.coolMode === 'countdown') {
           coolTimerEl.textContent = fmt(state.coolCountdownSeconds);
+          coolTimerEl.classList.add('ready');
+        } else {
+          coolTimerEl.textContent = '00:00';
         }
       }
     }
@@ -495,11 +560,13 @@
     state.heatRunning = false;
     state.heatPaused = false;
     state.heatElapsed = 0;
-    state.tempReached = false;
+    state.targetReached = false;
     if (heatTimerInterval) clearInterval(heatTimerInterval);
     heatTimerInterval = null;
     heatTimerEl.textContent = '00:00';
     heatDurationDisplay.textContent = '00:00';
+    progressFill.style.width = '0%';
+    progressPct.textContent = '0%';
     heatAlert.classList.remove('show');
     coolCard.style.display = 'none';
     updateHeatUI();
@@ -511,7 +578,38 @@
     $('heat-pause').textContent = state.heatPaused ? 'Resume' : 'Pause';
   }
 
-  // Cool timer logic
+  // ---- Target time controls ----
+  function setTarget(seconds) {
+    seconds = Math.max(1, Math.min(999, seconds));
+    state.targetSeconds = seconds;
+    targetInput.value = seconds;
+    targetValueEl.textContent = `${seconds}s`;
+    targetDisplayStat.textContent = `${seconds}s`;
+  }
+
+  targetInput.addEventListener('change', () => {
+    let val = parseInt(targetInput.value);
+    if (isNaN(val) || val < 1) val = 1;
+    setTarget(val);
+  });
+
+  targetInput.addEventListener('input', () => {
+    let val = parseInt(targetInput.value);
+    if (!isNaN(val) && val >= 1) setTarget(val);
+  });
+
+  $('target-up-5').addEventListener('click', () => setTarget(state.targetSeconds + 5));
+  $('target-down-5').addEventListener('click', () => setTarget(state.targetSeconds - 5));
+
+  targetValueEl.addEventListener('click', () => {
+    const val = prompt('Target heat time (seconds):', state.targetSeconds);
+    if (val !== null) {
+      const parsed = parseInt(val);
+      if (!isNaN(parsed) && parsed >= 1) setTarget(parsed);
+    }
+  });
+
+  // ---- Cool timer ----
   function startCool() {
     if (state.coolMode === 'countdown') {
       state.coolElapsed = 0;
@@ -521,7 +619,6 @@
       coolTimerInterval = setInterval(tickCool, 100);
       updateCoolUI();
     } else {
-      // Manual mode: button becomes "I'm ready" — log the session
       logSession();
       resetAll();
     }
@@ -530,18 +627,15 @@
   function tickCool() {
     if (!state.coolPaused) {
       state.coolElapsed = now() - state.coolStartTimestamp;
-      const remaining = Math.max(0, state.coolCountdownSeconds * 1000 - state.coolElapsed);
-      coolTimerEl.textContent = fmtFull(remaining);
-
-      coolDurationDisplay.textContent = fmtFull(state.coolElapsed);
+      const remaining = Math.max(0, state.coolCountdownSeconds - state.coolElapsed / 1000);
+      coolTimerEl.textContent = fmt(remaining);
+      coolDurationDisplay.textContent = fmt(state.coolElapsed / 1000);
 
       if (remaining <= 0) {
-        // Ready!
         coolAlert.classList.add('show');
         state.coolRunning = false;
         clearInterval(coolTimerInterval);
         coolTimerInterval = null;
-        // Log the session
         logSession();
         resetAll();
       }
@@ -573,18 +667,16 @@
     $('cool-pause').textContent = state.coolPaused ? 'Resume' : 'Pause';
   }
 
-  // Session logging
+  // ---- Logging ----
   function logSession() {
     const totalMs = state.heatElapsed + state.coolElapsed;
-    const entry = {
+    state.log.unshift({
       time: new Date().toLocaleTimeString(),
-      temp: state.temp,
-      heatTime: fmtFull(state.heatElapsed),
-      coolTime: state.coolMode === 'countdown' ? fmtFull(state.coolElapsed) : 'manual',
-      totalTime: fmtFull(totalMs),
+      heatTime: fmtMs(state.heatElapsed),
+      coolTime: state.coolMode === 'countdown' ? fmtMs(state.coolElapsed) : 'manual',
+      totalTime: fmtMs(totalMs),
       timestamp: now()
-    };
-    state.log.unshift(entry);
+    });
     renderLog();
   }
 
@@ -598,7 +690,6 @@
       <div class="log-entry">
         <div class="log-time">${e.time}</div>
         <div class="log-detail">
-          <span class="log-tag">🔥 ${e.temp}°F</span>
           <span class="log-tag">heat ${e.heatTime}</span>
           <span class="log-tag">cool ${e.coolTime}</span>
           <span class="log-tag">total ${e.totalTime}</span>
@@ -610,58 +701,9 @@
   function resetAll() {
     resetHeat();
     resetCool();
-    // Check if we should re-show heat alert cleared
-    state.tempReached = false;
-    heatAlert.classList.remove('show');
   }
 
-  // Temperature controls
-  tempInput.addEventListener('change', () => {
-    let val = parseInt(tempInput.value) || 315;
-    val = Math.max(0, Math.min(500, val));
-    state.temp = val;
-    tempInput.value = val;
-    currentTempEl.textContent = `${val}°F`;
-    checkTempAlert();
-  });
-
-  tempInput.addEventListener('input', () => {
-    let val = parseInt(tempInput.value);
-    if (!isNaN(val)) {
-      val = Math.max(0, Math.min(500, val));
-      state.temp = val;
-      currentTempEl.textContent = `${val}°F`;
-      checkTempAlert();
-    }
-  });
-
-  function checkTempAlert() {
-    if (state.temp >= state.targetTemp && !state.tempReached && state.heatRunning && !state.heatPaused) {
-      state.tempReached = true;
-      heatAlert.classList.add('show');
-      coolCard.style.display = 'block';
-      coolTitle.textContent = 'Cool Down';
-      if (state.coolMode === 'countdown') {
-        coolTimerEl.textContent = fmt(state.coolCountdownSeconds);
-      }
-    }
-  }
-
-  function setTemp(delta) {
-    let val = state.temp + delta;
-    val = Math.max(0, Math.min(500, val));
-    state.temp = val;
-    tempInput.value = val;
-    currentTempEl.textContent = `${val}°F`;
-    checkTempAlert();
-  }
-
-  $('temp-up-1').addEventListener('click', () => setTemp(1));
-  $('temp-down-1').addEventListener('click', () => setTemp(-1));
-  $('temp-up-10').addEventListener('click', () => setTemp(10));
-  $('temp-down-10').addEventListener('click', () => setTemp(-10));
-
-  // Button handlers
+  // ---- Event bindings ----
   $('heat-start').addEventListener('click', startHeat);
   $('heat-pause').addEventListener('click', pauseHeat);
   $('heat-reset').addEventListener('click', resetHeat);
@@ -670,7 +712,6 @@
   $('cool-pause').addEventListener('click', pauseCool);
   $('cool-reset').addEventListener('click', resetCool);
 
-  // Countdown mode toggle
   document.querySelectorAll('.mode-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
@@ -688,67 +729,31 @@
     });
   });
 
-  // Clear log
   $('log-clear').addEventListener('click', () => {
     state.log = [];
     renderLog();
   });
 
-  // Keyboard shortcuts
+  // ---- Keyboard shortcuts ----
   document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') return;
     switch(e.key) {
-      case ' ': // Space — toggle heat pause or cool pause
-        if (state.heatRunning && !state.coolRunning) {
-          pauseHeat();
-        } else if (state.coolRunning) {
-          pauseCool();
-        }
+      case ' ':
+        if (state.heatRunning && !state.coolRunning) pauseHeat();
+        else if (state.coolRunning) pauseCool();
         break;
-      case 'r': case 'R':
-        resetHeat();
-        break;
-      case 's': case 'S': // Start/stop heat
-        if (!state.heatRunning) startHeat();
-        break;
-      case 'c': case 'C': // Start cool
-        if (state.tempReached && !state.coolRunning) {
-          startCool();
-        }
+      case 'r': case 'R': resetHeat(); break;
+      case 's': case 'S': if (!state.heatRunning) startHeat(); break;
+      case 'c': case 'C':
+        if (state.targetReached && !state.coolRunning) startCool();
         break;
     }
   });
 
-  // Init
-  targetTempDisplay.textContent = `${state.targetTemp}°F`;
-  currentTempEl.textContent = `${state.temp}°F`;
+  // ---- Init ----
   updateHeatUI();
   updateCoolUI();
-
-  // Allow changing target temp — double-click the target display
-  targetTempDisplay.style.cursor = 'pointer';
-  targetTempDisplay.title = 'Click to change target temp';
-  targetTempDisplay.addEventListener('click', () => {
-    const newTarget = prompt('Target temperature (°F):', state.targetTemp);
-    if (newTarget) {
-      const val = parseInt(newTarget);
-      if (!isNaN(val) && val > 0 && val <= 500) {
-        state.targetTemp = val;
-        targetTempDisplay.textContent = `${val}°F`;
-      }
-    }
-  });
-
-  // Cool countdown duration — click to edit
-  readyTempDisplay.style.cursor = 'pointer';
-  readyTempDisplay.title = 'Enter temp when ready (optional)';
-  readyTempDisplay.addEventListener('click', () => {
-    const val = prompt('Temp when ready (°F, optional):', state.readyTemp || '');
-    if (val !== null) {
-      state.readyTemp = val ? parseInt(val) : null;
-      readyTempDisplay.textContent = state.readyTemp ? `${state.readyTemp}°F` : '—';
-    }
-  });
+  setTarget(45);
 </script>
 </body>
 </html>
