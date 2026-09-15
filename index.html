@@ -542,6 +542,12 @@
   }
 
   function tickHeat() {
+    // Safety guard: if target already reached, stop ticking
+    if (state.heatTargetReached) {
+      if (heatInterval) { clearInterval(heatInterval); heatInterval = null; }
+      state.heatRunning = false;
+      return;
+    }
     if (!state.heatPaused) {
       state.heatElapsed = now() - state.heatStartTimestamp;
       const elapsedSec = state.heatElapsed / 1000;
@@ -628,13 +634,24 @@
     if (state.coolMode === 'countdown') {
       coolTimerEl.textContent = fmt(state.coolCountdownSeconds);
       coolTimerEl.classList.add('ready');
+      // Auto-start the cool countdown
+      startCoolCountdown();
     } else {
       coolTimerEl.textContent = '00:00';
+      coolStartBtn.disabled = false;
+      coolStartBtn.textContent = '✅ Mark Ready';
+      coolPauseBtn.disabled = true;
     }
+  }
 
-    coolPauseBtn.disabled = true;
-    coolStartBtn.disabled = false;
-    coolStartBtn.textContent = state.coolMode === 'manual' ? '✅ Mark Ready' : 'Start Cooling';
+  // Starts the cool countdown without requiring a button press (auto-start after heat)
+  function startCoolCountdown() {
+    state.coolElapsed = 0;
+    state.coolRunning = true;
+    state.coolPaused = false;
+    state.coolStartTimestamp = now();
+    coolInterval = setInterval(tickCool, 100);
+    updateCoolUI();
   }
 
   function resetCoolPhase() {
